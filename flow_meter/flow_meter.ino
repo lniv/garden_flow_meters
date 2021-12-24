@@ -25,6 +25,8 @@
 #define FLOW_PIN D4
 #define MAX_MSEC_WHEN_FLOWING 50
 
+const float pulses_per_litre = 450.0;
+
 WiFiUDP udp;
 
 uint32_t counter = 0, last_dt = 0, last_count = 0, flow_period_start = 0, flow_period_start_counts = 0, last_flow_length_ms = 0, last_flow_counts = 0;
@@ -91,12 +93,14 @@ void setup() {
 void loop() {
     char output_s[256] = {0};
     int len_of_output = -1;
+    float last_flow_litres = 0.0;
 
     sprintf(output_s, "%0ld, flow %0d", counter, flowing);
     Serial.println(output_s);
     if (new_flow_event) {
         new_flow_event = false;
-        len_of_output = sprintf(output_s, "%s : new flow event total %0ld length %0ld msec ", name, last_flow_counts, last_flow_length_ms);
+        last_flow_litres = last_flow_counts / pulses_per_litre;
+        len_of_output = sprintf(output_s, "%s : new flow event total %0.3f L, over %0ld msec ", name, last_flow_litres, last_flow_length_ms);
         Serial.println(output_s);
         send_packet(output_s, len_of_output);
     }
