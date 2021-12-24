@@ -12,10 +12,20 @@
  *          send sme other stats (battery status?)
  *      upon command, light display etc.
  *      sleep most of the time
+ *
+ * NOTE:
+ *  must define const char *ssid, *passwd, *host, name and const int port in secrets.h, giving the appropriate network info.
  */
+
+#include "secrets.h"
+
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 
 #define FLOW_PIN D4
 #define MAX_MSEC_WHEN_FLOWING 50
+
+WiFiUDP udp;
 
 uint32_t counter = 0, last_dt = 0, last_count = 0, flow_period_start = 0, flow_period_start_counts = 0, last_flow_length_ms = 0, last_flow_counts = 0;
 bool flowing = false, new_flow_event = false;
@@ -42,27 +52,53 @@ ICACHE_RAM_ATTR void pin_isr(void) {
     }
 }
 
+/*
+ * send a packet of data to the server
+ * Args:
+ *      char *packetBuffer : buffer
+ *      int j : length
+ */
+void send_packet(char *packetBuffer, int j) {
+    udp.beginPacket(host, port);
+    udp.write(packetBuffer, j);
+    udp.endPacket();
+    return;
+}
+
 
 void setup() {
+    int i = 0;
 
     Serial.begin(115200); //Start Serial at 115200bps
-    delay(100); // delay .1s
-
+    delay(100); // probably unnecesssary
     pinMode(FLOW_PIN, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(FLOW_PIN), pin_isr, RISING);
-    Serial.println("up");
 
+    Serial.println("About to connect to network");
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.println(i);
+        i++;
+    }
+    Serial.println("");
+
+    Serial.print("WiFi connected, IP address: ");
+    Serial.println(WiFi.localIP());
 }
 
 
 void loop() {
     char output_s[256] = {0};
+    int len_of_output = -1;
+
     sprintf(output_s, "%0ld, flow %0d", counter, flowing);
     Serial.println(output_s);
     if (new_flow_event) {
         new_flow_event = false;
-        sprintf(output_s, "new flow event total %0ld length %0ld msec ", last_flow_counts, last_flow_length_ms);
+        len_of_output = sprintf(output_s, "%s : new flow event total %0ld length %0ld msec ", name, last_flow_counts, last_flow_length_ms);
         Serial.println(output_s);
+        send_packet(output_s, len_of_output);
     }
     delay(1000);
 };
