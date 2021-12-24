@@ -22,7 +22,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-#define FLOW_PIN D4
+#define FLOW_PIN D1  // D4 wasn't a good idea, see e.g. https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
 #define MAX_MSEC_WHEN_FLOWING 50
 
 const float pulses_per_litre = 450.0;
