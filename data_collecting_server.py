@@ -11,6 +11,11 @@ import logging
 import argparse
 import socket
 
+
+# in case we're debugging, without the explicit logger setup, just to ensure we have some visible output.
+logging.basicConfig(level = logging.INFO)
+
+
 def clear_and_setup_loggers(log_folder = '/tmp', log_level = logging.INFO):
     '''
     clear all previous handlers, and set up a screen / file logger.
