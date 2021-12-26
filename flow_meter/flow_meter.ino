@@ -69,7 +69,8 @@ void send_packet(char *packetBuffer, int j) {
 
 
 void setup() {
-    int i = 0;
+    int i = 0, len_of_output = -1;
+    char output_s[256] = {0};
 
     Serial.begin(115200); //Start Serial at 115200bps
     delay(100); // probably unnecesssary
@@ -87,6 +88,10 @@ void setup() {
 
     Serial.print("WiFi connected, IP address: ");
     Serial.println(WiFi.localIP());
+    // let em know we're alive.
+    len_of_output = sprintf(output_s, "%s : just booted", name);
+    Serial.println(output_s);
+    send_packet(output_s, len_of_output);
 }
 
 
